@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: predictx-backend
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: predictx-db
+          property: connectionString
+      - key: ALLOWED_ORIGINS
+        value: "*"
+      - key: ENVIRONMENT
+        value: production
+
+databases:
+  - name: predictx-db
+    databaseName: predictx
+    user: predictx_user
+    plan: free

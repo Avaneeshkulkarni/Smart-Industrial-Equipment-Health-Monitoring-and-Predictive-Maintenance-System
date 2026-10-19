@@ -1,0 +1,44 @@
+{
+  "model_name": "robotic_arm_multisignal",
+  "created_at": "2026-10-18T21:42:32.720737",
+  "base_features": [
+    "vibration_rms",
+    "temperature_motor",
+    "current_phase_avg",
+    "pressure_level",
+    "rpm",
+    "ambient_temp",
+    "hours_since_maintenance"
+  ],
+  "feature_columns": [
+    "vibration_rms",
+    "temperature_motor",
+    "current_phase_avg",
+    "pressure_level",
+    "rpm",
+    "ambient_temp",
+    "hours_since_maintenance",
+    "vibration_rms_rolling_mean",
+    "vibration_rms_diff",
+    "temperature_motor_rolling_mean",
+    "temperature_motor_diff",
+    "current_phase_avg_rolling_mean",
+    "current_phase_avg_diff",
+    "pressure_level_rolling_mean",
+    "pressure_level_diff",
+    "rpm_rolling_mean",
+    "rpm_diff"
+  ],
+  "sequence_length": 20,
+  "xgb_threshold": 0.3199999999999999,
+  "lstm_threshold": 0.7399999999999997,
+  "anomaly_threshold": 70.0,
+  "score_min": -0.09741798340166025,
+  "score_max": 0.3104859809867187,
+  "test_metrics": {
+    "accuracy": 0.9389,
+    "precision": 0.9958,
+    "recall": 0.9192,
+    "f1": 0.956
+  }
+}
