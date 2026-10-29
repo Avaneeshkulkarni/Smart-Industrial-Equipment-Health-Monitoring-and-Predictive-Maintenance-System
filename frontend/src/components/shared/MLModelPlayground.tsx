@@ -310,7 +310,6 @@ export const MLModelPlayground: React.FC<MLModelPlaygroundProps> = ({
     if (t.includes('robotic') || t.includes('arm')) return 'robotic_arm';
     if (t.includes('cnc')) return 'cnc_machine';
     if (t.includes('compressor') || t.includes('cmp')) return 'compressor';
-    if (t.includes('motor') || t.includes('mtr')) return 'electric_motor';
     if (t.includes('pump') || t.includes('pmp')) return 'pump';
     return t;
   }, [equipmentType]);

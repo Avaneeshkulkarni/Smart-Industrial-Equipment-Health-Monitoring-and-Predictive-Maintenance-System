@@ -4,7 +4,7 @@
 
 // --------------- Equipment ---------------
 
-export type EquipmentType = 'robotic_arm' | 'electric_motor' | 'pump' | 'compressor' | 'cnc_machine';
+export type EquipmentType = 'robotic_arm' | 'pump' | 'compressor' | 'cnc_machine';
 
 export type EquipmentStatus = 'healthy' | 'warning' | 'critical' | 'offline';
 

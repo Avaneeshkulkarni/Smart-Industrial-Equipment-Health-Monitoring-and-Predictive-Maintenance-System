@@ -33,8 +33,8 @@ export function RealTimeHealthMonitor({
 }: RealTimeHealthMonitorProps): React.ReactElement {
   const [dataPoints, setDataPoints] = useState<StreamPoint[]>([]);
   const [lastUpdated, setLastUpdated] = useState<string>('Connecting...');
-  const [prevHealth, setPrevHealth] = useState<number | null>(null);
   const [healthDelta, setHealthDelta] = useState<number>(0);
+  const prevHealthRef = useRef<number | null>(null);
   const pointsRef = useRef<StreamPoint[]>([]);
 
   // When a new prediction arrives from real ML model, push into rolling stream
@@ -53,10 +53,10 @@ export function RealTimeHealthMonitor({
     const lstmProb = signals?.lstm?.probability ? Math.round((1 - signals.lstm.probability) * 1000) / 10 : currentHealth;
 
     // Track delta
-    if (prevHealth !== null) {
-      setHealthDelta(Math.round((currentHealth - prevHealth) * 10) / 10);
+    if (prevHealthRef.current !== null) {
+      setHealthDelta(Math.round((currentHealth - prevHealthRef.current) * 10) / 10);
     }
-    setPrevHealth(currentHealth);
+    prevHealthRef.current = currentHealth;
     setLastUpdated(timeStr);
 
     const newPoint: StreamPoint = {
