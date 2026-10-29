@@ -41,10 +41,6 @@ def get_readings(
         SensorReadingModel.equipment_id == equipment_id
     )
 
-    # If a specific parameter is requested, filter for readings that contain it
-    if param:
-        query = query.filter(SensorReadingModel.values.has_key(param))
-
     # Time window filtering
     if window:
         from datetime import datetime, timedelta
@@ -57,14 +53,16 @@ def get_readings(
 
     if latest:
         if param:
-            row = query.first()
-            if not row:
-                return []
-            return [SensorReadingSchema(
-                timestamp=row.timestamp,
-                equipmentId=row.equipment_id,
-                values=row.values,
-            )]
+            # Find the most recent reading containing the parameter
+            recent_candidates = query.limit(100).all()
+            for r in recent_candidates:
+                if isinstance(r.values, dict) and param in r.values:
+                    return [SensorReadingSchema(
+                        timestamp=r.timestamp,
+                        equipmentId=r.equipment_id,
+                        values=r.values,
+                    )]
+            return []
 
         # If fetching latest reading without parameter filter, merge across recent readings so all parameters are present
         recent_rows = query.limit(60).all()
@@ -85,7 +83,10 @@ def get_readings(
             values=merged_values,
         )]
 
-    rows = query.all()
+    rows = query.limit(500).all()
+    if param:
+        rows = [r for r in rows if isinstance(r.values, dict) and param in r.values]
+
     return [
         SensorReadingSchema(
             timestamp=r.timestamp,

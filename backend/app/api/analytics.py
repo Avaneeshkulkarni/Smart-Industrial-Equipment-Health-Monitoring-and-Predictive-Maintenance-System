@@ -17,13 +17,14 @@ from app.schemas.analytics import (
     HealthDistributionPointSchema,
 )
 
+from app.services.ml_inference import ml_registry
+from app.api.equipment import _get_live_health_for_equipment
+
 router = APIRouter(prefix="/api/analytics", tags=["analytics"])
 
 # Display names for equipment types — matches frontend equipmentConfig
 TYPE_DISPLAY_NAMES = {
-    "robotic_arm": "Robotic Arms",
-    "electric_motor": "Electric Motors",
-    "pump": "Pumps",
+    "pump": "Centrifugal Pumps",
     "compressor": "Compressors",
     "cnc_machine": "CNC Machines",
 }
@@ -34,8 +35,11 @@ def get_analytics(db: Session = Depends(get_db)):
     """
     Returns the full analytics payload:
     { summary, typeMetrics, healthDistribution }
+    Only includes active equipment running real-time ML inference.
     """
-    equipment = db.query(EquipmentModel).all()
+    raw_equipment = db.query(EquipmentModel).all()
+    # Strictly keep only machines backed by active ML models
+    equipment = [e for e in raw_equipment if ml_registry.is_available(ml_registry.normalize_type(e.type))]
     total = len(equipment)
     if total == 0:
         return {
@@ -48,18 +52,27 @@ def get_analytics(db: Session = Depends(get_db)):
             "healthDistribution": [],
         }
 
-    healthy = sum(1 for e in equipment if e.status == "healthy")
-    warning = sum(1 for e in equipment if e.status == "warning")
-    critical = sum(1 for e in equipment if e.status == "critical")
-    offline = sum(1 for e in equipment if e.status == "offline")
-    avg_health = round(sum(e.health_score for e in equipment) / total, 1)
+    # Compute live health & status for all active ML machines
+    live_data = {e.id: _get_live_health_for_equipment(e, db) for e in equipment}
 
-    active_alerts = db.query(AlertModel).filter(AlertModel.status == "active").count()
+    healthy = sum(1 for e in equipment if live_data[e.id][1] == "healthy")
+    warning = sum(1 for e in equipment if live_data[e.id][1] == "warning")
+    critical = sum(1 for e in equipment if live_data[e.id][1] == "critical")
+    offline = sum(1 for e in equipment if live_data[e.id][1] == "offline")
+    avg_health = round(sum(live_data[e.id][0] for e in equipment) / total, 1)
+
+    active_alerts = db.query(AlertModel).filter(
+        AlertModel.status == "active",
+        AlertModel.equipment_id.in_([e.id for e in equipment])
+    ).count()
     pending_wo = db.query(WOModel).filter(
-        WOModel.status.in_(["pending", "scheduled"])
+        WOModel.status.in_(["pending", "scheduled"]),
+        WOModel.equipment_id.in_([e.id for e in equipment])
     ).count()
 
-    predictions = db.query(PredictionModel).all()
+    predictions = db.query(PredictionModel).filter(
+        PredictionModel.equipment_id.in_([e.id for e in equipment])
+    ).all()
     anomalies = sum(1 for p in predictions if p.anomaly_score > 0.4)
 
     summary = AnalyticsSummarySchema(
@@ -74,22 +87,22 @@ def get_analytics(db: Session = Depends(get_db)):
         anomaliesDetected=anomalies,
     )
 
-    # Type metrics
-    types = ["robotic_arm", "electric_motor", "pump", "compressor", "cnc_machine"]
+    # Type metrics for the 3 active ML models
+    types = ["cnc_machine", "compressor", "pump"]
     type_metrics = []
     for t in types:
         equip_of_type = [e for e in equipment if e.type == t]
         count = len(equip_of_type)
         if count == 0:
             continue
-        avg_h = round(sum(e.health_score for e in equip_of_type) / count, 1)
+        avg_h = round(sum(live_data[e.id][0] for e in equip_of_type) / count, 1)
         type_metrics.append(EquipmentTypeMetricSchema(
             type=t,
             displayName=TYPE_DISPLAY_NAMES.get(t, t.title()),
             avgHealth=avg_h,
             count=count,
-            criticalCount=sum(1 for e in equip_of_type if e.status == "critical"),
-            warningCount=sum(1 for e in equip_of_type if e.status == "warning"),
+            criticalCount=sum(1 for e in equip_of_type if live_data[e.id][1] == "critical"),
+            warningCount=sum(1 for e in equip_of_type if live_data[e.id][1] == "warning"),
         ))
 
     # Health distribution
@@ -103,7 +116,7 @@ def get_analytics(db: Session = Depends(get_db)):
     health_dist = [
         HealthDistributionPointSchema(
             range=label,
-            count=sum(1 for e in equipment if lo <= e.health_score <= hi),
+            count=sum(1 for e in equipment if lo <= live_data[e.id][0] <= hi),
         )
         for label, lo, hi in ranges
     ]

@@ -26,10 +26,9 @@ warnings.filterwarnings("ignore", category=UserWarning)
 
 # Disable GPU/verbose logs from TensorFlow/Keras
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+os.environ["KERAS_BACKEND"] = "torch"
 try:
     import keras
-    import tensorflow as tf
-    tf.get_logger().setLevel("ERROR")
 except ImportError:
     keras = None
 
@@ -164,7 +163,7 @@ class RoboticArmMLService:
                     self.is_keras_lstm = False
 
             self.loaded = True
-            print("✅ RoboticArmMLService loaded successfully.")
+            print("[OK] RoboticArmMLService loaded successfully.")
         except Exception as e:
             print(f"Error loading RoboticArmMLService: {e}")
             self.loaded = False
@@ -311,12 +310,14 @@ class CNCMachineMLService:
             # Reconstruct Keras LSTM from architecture and weights
             if keras is not None:
                 arch = self.bundle["lstm_architecture"]
+                if isinstance(arch, dict):
+                    arch = json.dumps(arch)
                 weights = self.bundle["lstm_weights"]
                 self.lstm_model = keras.models.model_from_json(arch)
                 self.lstm_model.set_weights(weights)
 
             self.loaded = True
-            print("✅ CNCMachineMLService loaded successfully.")
+            print("[OK] CNCMachineMLService loaded successfully.")
         except Exception as e:
             print(f"Error loading CNCMachineMLService: {e}")
             self.loaded = False
@@ -455,7 +456,7 @@ class CompressorMLService:
             self.bundle = joblib.load(path)
             self.bundle["imputer"] = patch_imputer(self.bundle["imputer"])
             self.loaded = True
-            print("✅ CompressorMLService loaded successfully.")
+            print("[OK] CompressorMLService loaded successfully.")
         except Exception as e:
             print(f"Error loading CompressorMLService: {e}")
             self.loaded = False
@@ -574,14 +575,176 @@ class CompressorMLService:
         }
 
 
+class PumpMLService:
+    """Multi-Signal ML Service for Centrifugal Pump (`pump_predictive_maintenance.pkl`)."""
+
+    def __init__(self):
+        self.loaded = False
+        self.model_type = "tri_signal"
+        self.equipment_type = "pump"
+        self.bundle = None
+        self.lstm_model = None
+        self._load()
+
+    def _load(self):
+        try:
+            path = os.path.join(ML_MODELS_DIR, "pump", "pump_predictive_maintenance.pkl")
+            if not os.path.exists(path):
+                root_path = os.path.join(BASE_DIR, "..", "pump_predictive_maintenance.pkl")
+                if os.path.exists(root_path):
+                    path = root_path
+                else:
+                    print("Pump model artifact not found.")
+                    return
+
+            self.bundle = joblib.load(path)
+            self.bundle["imputer"] = patch_imputer(self.bundle["imputer"])
+
+            # Reconstruct Keras LSTM from architecture and weights
+            if keras is not None and "lstm_model" in self.bundle:
+                lstm_dict = self.bundle["lstm_model"]
+                arch = lstm_dict.get("architecture")
+                if isinstance(arch, dict):
+                    arch = json.dumps(arch)
+                weights = lstm_dict.get("weights")
+                self.lstm_model = keras.models.model_from_json(arch)
+                self.lstm_model.set_weights(weights)
+
+            self.loaded = True
+            print("[OK] PumpMLService loaded successfully.")
+        except Exception as e:
+            print(f"Error loading PumpMLService: {e}")
+            self.loaded = False
+
+    def predict(self, current_telemetry: dict, history: list[dict] = None) -> dict:
+        if not self.loaded:
+            raise RuntimeError("Pump ML models are not loaded.")
+
+        records = []
+        if history:
+            records.extend(history)
+        records.append(current_telemetry)
+
+        while len(records) < 20:
+            jittered = dict(records[0])
+            jittered["vibration_rms"] = jittered.get("vibration_rms", 1.4) + float(np.random.normal(0, 0.02))
+            jittered["temperature_motor"] = jittered.get("temperature_motor", 48.0) + float(np.random.normal(0, 0.1))
+            records.insert(0, jittered)
+
+        df = pd.DataFrame(records)
+        base_numeric = [
+            "vibration_rms", "temperature_motor", "current_phase_avg",
+            "pressure_level", "rpm", "ambient_temp", "hours_since_maintenance"
+        ]
+        for col in base_numeric:
+            if col not in df.columns:
+                df[col] = np.nan
+
+        # Categorical / one-hot encoded operating modes for pump
+        df["operating_mode_idle"] = 0.0
+        df["operating_mode_normal"] = 1.0
+        df["operating_mode_peak"] = 0.0
+
+        feat_cols = self.bundle["features"]
+        df[feat_cols] = self.bundle["imputer"].transform(df[feat_cols])
+        latest_X = df[feat_cols].iloc[-1:]
+
+        # Signal 1: XGBoost
+        xgb_prob = float(self.bundle["xgboost_model"].predict_proba(latest_X)[0, 1])
+        xgb_risk = float(xgb_prob * 100.0)
+
+        # Signal 2: Isolation Forest
+        X_iso_scaled = self.bundle["iso_scaler"].transform(latest_X)
+        raw_score = float(-self.bundle["isolation_forest_model"].decision_function(X_iso_scaled)[0])
+        score_min = float(self.bundle.get("isolation_score_min", -0.0918))
+        score_max = float(self.bundle.get("isolation_score_max", 0.1912))
+        denom = max(1e-5, score_max - score_min)
+        anomaly_risk = float(np.clip(((raw_score - score_min) / denom) * 100.0, 0.0, 100.0))
+
+        # Signal 3: Keras LSTM (20 time-steps)
+        X_lstm_scaled = self.bundle["lstm_scaler"].transform(df[feat_cols].iloc[-20:])
+        lstm_prob = float(self.lstm_model.predict(np.expand_dims(X_lstm_scaled, 0), verbose=0)[0, 0])
+
+        # Composite multi-signal weighted risk score
+        xgb_w = float(self.bundle.get("xgb_weight", 0.75))
+        lstm_w = float(self.bundle.get("lstm_weight", 0.15))
+        iso_w = float(self.bundle.get("isolation_weight", 0.10))
+        composite_risk = (xgb_w * xgb_prob) + (lstm_w * lstm_prob) + (iso_w * (anomaly_risk / 100.0))
+
+        # Composite Health Score
+        health_score = float(np.clip(100.0 - (composite_risk * 100.0), 0.0, 100.0))
+
+        threshold = float(self.bundle.get("threshold", 0.57))
+        anomaly_thresh = 70.0
+        temporal_thresh = 0.60
+
+        anomaly_warning = bool(anomaly_risk >= anomaly_thresh)
+        temporal_warning = bool(lstm_prob >= temporal_thresh)
+
+        if composite_risk >= threshold:
+            predicted_failure = 1
+            decision_rule = f"Tri-Signal Weighted Risk ({composite_risk:.2f}) >= Gated Threshold ({threshold:.2f})"
+        elif xgb_prob >= 0.45:
+            predicted_failure = 1
+            decision_rule = "Direct XGBoost High Probability (>= 0.45)"
+        else:
+            predicted_failure = 0
+            decision_rule = "Normal Operating Boundary"
+
+        if health_score >= 80.0:
+            health_status = "Healthy"
+        elif health_score >= 60.0:
+            health_status = "Warning"
+        elif health_score >= 30.0:
+            health_status = "Degrading"
+        else:
+            health_status = "Critical"
+
+        return {
+            "healthScore": round(health_score, 1),
+            "healthStatus": health_status,
+            "predictedFailure": predicted_failure,
+            "decisionRule": decision_rule,
+            "anomalyWarning": anomaly_warning,
+            "temporalWarning": temporal_warning,
+            "signals": {
+                "xgboost": {
+                    "probability": round(xgb_prob, 4),
+                    "riskScore": round(xgb_risk, 1),
+                    "threshold": round(0.40, 2),
+                    "triggered": bool(xgb_prob >= 0.40),
+                },
+                "isolationForest": {
+                    "anomalyRisk": round(anomaly_risk, 1),
+                    "threshold": round(anomaly_thresh, 1),
+                    "triggered": anomaly_warning,
+                },
+                "lstm": {
+                    "probability": round(lstm_prob, 4),
+                    "threshold": round(temporal_thresh, 2),
+                    "triggered": temporal_warning,
+                }
+            },
+            "formula": f"100 - (100 * ({xgb_w:.2f}×XGB + {lstm_w:.2f}×LSTM + {iso_w:.2f}×Iso))",
+            "modelMetadata": {
+                "system": "Centrifugal Pump Tri-Signal Model",
+                "weights": {"xgb": xgb_w, "lstm": lstm_w, "isolation": iso_w},
+                "threshold": threshold,
+                "accuracy": round(float(self.bundle.get("test_accuracy", 0.95)), 4),
+                "f1": round(float(self.bundle.get("test_f1", 0.96)), 4)
+            }
+        }
+
+
 class ModelRegistry:
     """Central registry providing real model inference and honest availability gating."""
 
     def __init__(self):
+        # 3 active models per configuration: CNC, Compressor, and Pump
         self.services = {
-            "robotic_arm": RoboticArmMLService(),
             "cnc_machine": CNCMachineMLService(),
             "compressor": CompressorMLService(),
+            "pump": PumpMLService(),
         }
 
     def normalize_type(self, raw_type: str) -> str:
@@ -600,6 +763,9 @@ class ModelRegistry:
 
     def is_available(self, equipment_type: str) -> bool:
         norm = self.normalize_type(equipment_type)
+        if norm == "robotic_arm":
+            # Disabled per user instruction: 'for time being dont use robotic arm model'
+            return False
         service = self.services.get(norm)
         return service is not None and service.loaded
 
@@ -609,6 +775,8 @@ class ModelRegistry:
 
     def predict(self, equipment_type: str, current_telemetry: dict, history: list[dict] = None) -> dict:
         norm = self.normalize_type(equipment_type)
+        if norm == "robotic_arm":
+            raise ValueError("Robotic Arm model is temporarily disabled per configuration.")
         service = self.services.get(norm)
         if not service or not service.loaded:
             raise ValueError(f"No real ML model available for equipment type '{equipment_type}'")
@@ -616,30 +784,33 @@ class ModelRegistry:
 
     def get_status(self) -> dict:
         return {
-            "robotic_arm": {
-                "available": self.is_available("robotic_arm"),
-                "status": "ready" if self.is_available("robotic_arm") else "unavailable",
-                "modelType": "Tri-Signal (XGBoost + Isolation Forest + Bi-LSTM)",
-                "description": "6-Axis articulated industrial robotic arm failure and degradation risk",
-            },
             "cnc_machine": {
                 "available": self.is_available("cnc_machine"),
                 "status": "ready" if self.is_available("cnc_machine") else "unavailable",
                 "modelType": "Tri-Signal (XGBoost + Isolation Forest + Keras LSTM)",
+                "artifact": "cnc_complete_system.pkl",
                 "description": "CNC milling/turning spindle wear and mechanical anomaly detection",
             },
             "compressor": {
                 "available": self.is_available("compressor"),
                 "status": "ready" if self.is_available("compressor") else "unavailable",
                 "modelType": "Tri-Signal Weighted (XGBoost + Isolation Forest + LSTM)",
+                "artifact": "compressor_predictive_maintenance_model.pkl",
                 "description": "Industrial air/gas compressor pneumatic and thermal degradation",
             },
-            "electric_motor": {
-                "available": False,
-                "status": "blocked",
-                "reason": "No real model artifact available on disk. Awaiting Colab training pipeline.",
-            },
             "pump": {
+                "available": self.is_available("pump"),
+                "status": "ready" if self.is_available("pump") else "unavailable",
+                "modelType": "Tri-Signal Weighted (XGBoost 75% + LSTM 15% + Isolation Forest 10%)",
+                "artifact": "pump_predictive_maintenance.pkl",
+                "description": "Centrifugal pump cavitation, seal leakage, and hydrodynamic degradation",
+            },
+            "robotic_arm": {
+                "available": False,
+                "status": "disabled",
+                "reason": "Model inference temporarily disabled per configuration.",
+            },
+            "electric_motor": {
                 "available": False,
                 "status": "blocked",
                 "reason": "No real model artifact available on disk. Awaiting Colab training pipeline.",
@@ -649,4 +820,5 @@ class ModelRegistry:
 
 # Global registry and legacy compatibility singleton
 ml_registry = ModelRegistry()
-ml_service = ml_registry.get_service("robotic_arm")
+ml_service = ml_registry.get_service("cnc_machine")
+

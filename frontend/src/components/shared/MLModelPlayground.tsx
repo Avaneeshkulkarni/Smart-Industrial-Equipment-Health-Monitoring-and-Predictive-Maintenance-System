@@ -231,10 +231,75 @@ const EQUIPMENT_CONFIGS: Record<string, EquipmentPresets> = {
       },
     },
   },
+  pump: {
+    title: 'Centrifugal Pump Tri-Signal Engine',
+    subtitle: 'Trained model bundle: 75% XGBoost + 15% Keras LSTM + 10% Isolation Forest (threshold 0.57)',
+    badge: 'pump_predictive_maintenance.pkl',
+    accuracy: '95.0%',
+    f1: '0.960',
+    presets: {
+      nominal: {
+        name: 'Rated Hydrodynamic Flow',
+        desc: 'Nominal discharge pressure and vibration baseline',
+        icon: '🟢',
+        values: {
+          vibration_rms: 1.4,
+          temperature_motor: 48.0,
+          current_phase_avg: 14.5,
+          pressure_level: 6.2,
+          rpm: 1600,
+          ambient_temp: 22.0,
+          hours_since_maintenance: 120,
+        },
+      },
+      cavitation: {
+        name: 'Impeller Cavitation Drag',
+        desc: 'Vapor bubble collapse inducing high-frequency casing vibration',
+        icon: '🟡',
+        values: {
+          vibration_rms: 3.5,
+          temperature_motor: 62.0,
+          current_phase_avg: 19.5,
+          pressure_level: 4.8,
+          rpm: 1520,
+          ambient_temp: 24.0,
+          hours_since_maintenance: 420,
+        },
+      },
+      sealLeak: {
+        name: 'Mechanical Seal Friction',
+        desc: 'Frictional thermal rise with localized pressure loss',
+        icon: '🟠',
+        values: {
+          vibration_rms: 4.6,
+          temperature_motor: 74.0,
+          current_phase_avg: 24.0,
+          pressure_level: 3.6,
+          rpm: 1410,
+          ambient_temp: 27.5,
+          hours_since_maintenance: 750,
+        },
+      },
+      bearingSeizure: {
+        name: 'Critical Pump Failure',
+        desc: 'Severe hydraulic instability and bearing thermal runaway',
+        icon: '🔴',
+        values: {
+          vibration_rms: 6.8,
+          temperature_motor: 92.0,
+          current_phase_avg: 32.5,
+          pressure_level: 2.1,
+          rpm: 1050,
+          ambient_temp: 31.0,
+          hours_since_maintenance: 1020,
+        },
+      },
+    },
+  },
 };
 
 export const MLModelPlayground: React.FC<MLModelPlaygroundProps> = ({
-  equipmentType = 'robotic_arm',
+  equipmentType = 'cnc_machine',
   equipmentName,
   initialValues,
   onInferenceChange,
@@ -250,8 +315,8 @@ export const MLModelPlayground: React.FC<MLModelPlaygroundProps> = ({
     return t;
   }, [equipmentType]);
 
-  const isModelAvailable = ['robotic_arm', 'cnc_machine', 'compressor'].includes(normalizedType);
-  const activeConfig = EQUIPMENT_CONFIGS[normalizedType] || EQUIPMENT_CONFIGS.robotic_arm;
+  const isModelAvailable = ['cnc_machine', 'compressor', 'pump'].includes(normalizedType);
+  const activeConfig = EQUIPMENT_CONFIGS[normalizedType] || EQUIPMENT_CONFIGS.cnc_machine;
 
   const [telemetry, setTelemetry] = useState<MLTelemetryInput>({
     vibration_rms: initialValues?.vibration_rms ?? 1.4,
@@ -320,28 +385,29 @@ export const MLModelPlayground: React.FC<MLModelPlaygroundProps> = ({
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <h2 className="text-base font-semibold text-white">
-                ML Model Not Yet Available for {equipmentName || equipmentType}
+                {normalizedType === 'robotic_arm'
+                  ? `Robotic Arm AI Model Temporarily Inactive`
+                  : `ML Model Not Yet Available for ${equipmentName || equipmentType}`}
               </h2>
               <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-400 border border-amber-500/30">
-                Awaiting Model Artifact
+                {normalizedType === 'robotic_arm' ? 'Disabled by Config' : 'Awaiting Model Artifact'}
               </span>
             </div>
             <p className="mt-2 text-sm text-slate-400 leading-relaxed">
-              No genuine trained ML artifact exists on disk for equipment type{' '}
-              <code className="rounded bg-slate-800 px-1.5 py-0.5 text-xs text-amber-300 font-mono">
-                {normalizedType}
-              </code>
-              . Per strict system honesty rules, PredictX does not synthesize or fabricate ML scores.
+              {normalizedType === 'robotic_arm'
+                ? 'Robotic Arm model inference is temporarily disabled per configuration. Active genuine ML models are running for CNC Machine, Industrial Compressor, and Centrifugal Pump.'
+                : `No genuine trained ML artifact exists on disk for equipment type ${normalizedType}. Per strict system honesty rules, PredictX does not synthesize or fabricate ML scores.`}
             </p>
             <div className="mt-4 rounded-lg border border-slate-800 bg-slate-950/60 p-4">
               <div className="flex items-center gap-2 text-xs font-semibold text-slate-300">
                 <AlertCircle className="h-4 w-4 text-slate-400" />
-                Current Status:
+                Active Model Deployment Status:
               </div>
               <ul className="mt-2 space-y-1 text-xs text-slate-400 list-disc list-inside">
-                <li>Live telemetry collection and rule-based sensor thresholding remain active.</li>
-                <li>Offline ML model training pipeline has not delivered an artifact for this asset class.</li>
-                <li>Tri-signal automated risk gating will automatically activate once the artifact is placed in <code className="text-slate-300">backend/app/ml_models/{normalizedType}/</code>.</li>
+                <li><strong className="text-emerald-400">CNC Machine:</strong> <code className="text-slate-300">cnc_complete_system.pkl</code> (Active ✅)</li>
+                <li><strong className="text-emerald-400">Compressor:</strong> <code className="text-slate-300">compressor_predictive_maintenance_model.pkl</code> (Active ✅)</li>
+                <li><strong className="text-emerald-400">Centrifugal Pump:</strong> <code className="text-slate-300">pump_predictive_maintenance.pkl</code> (Active ✅)</li>
+                <li><strong className="text-slate-400">Robotic Arm:</strong> Temporarily disabled per configuration.</li>
               </ul>
             </div>
           </div>

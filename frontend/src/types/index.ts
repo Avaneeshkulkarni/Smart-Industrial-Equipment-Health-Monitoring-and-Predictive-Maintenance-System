@@ -134,15 +134,37 @@ export interface RULPrediction {
 export interface Prediction {
   equipmentId: string;
   timestamp: string;
-  /**
-   * DEMO PREDICTION — MOCK ML OUTPUT.
-   * This is prototype data, not output from a trained model.
-   */
   anomalyScore: number;        // 0–1
   riskScore: number;           // 0–100
   predictionConfidence: number; // 0–1
   faultPredictions: FaultPrediction[];
   rul: RULPrediction;
+  isRealModel?: boolean;
+  modelArtifact?: string;
+  healthScore?: number;
+  healthStatus?: 'Healthy' | 'Warning' | 'Degrading' | 'Critical';
+  decisionRule?: string;
+  available?: boolean;
+  message?: string;
+  formula?: string;
+  signals?: {
+    xgboost?: {
+      probability: number;
+      riskScore: number;
+      threshold: number;
+      triggered: boolean;
+    };
+    isolationForest?: {
+      anomalyRisk: number;
+      threshold: number;
+      triggered: boolean;
+    };
+    lstm?: {
+      probability: number;
+      threshold: number;
+      triggered: boolean;
+    };
+  };
 }
 
 // --------------- Maintenance ---------------

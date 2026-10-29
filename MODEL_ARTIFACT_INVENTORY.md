@@ -16,11 +16,11 @@ Per the strict non-negotiable rules:
 
 | Equipment Type | Identifier | Architecture / Models | Artifact Files | Status | Notes |
 |---|---|---|---|---|---|
-| **Robotic Arm** | `robotic_arm` | XGBoost (Signal 1) + Isolation Forest (Signal 2) + PyTorch / Keras 2-Layer LSTM (Signal 3) | Present in `backend/app/ml_models/robotic_arm/` & `ml/models/` | **READY ✅** | All model files, scalers, imputers, and metadata verified and loadable. |
 | **CNC Machine** | `cnc_machine` | XGBoost (Signal 1) + Isolation Forest (Signal 2) + Reconstructed Keras 2-Layer LSTM (Signal 3) | `cnc_complete_system.pkl` in `backend/app/ml_models/cnc_machine/` | **READY ✅** | Single self-contained bundle with imputer, scalers, thresholds, and weights verified and loadable. |
 | **Compressor** | `compressor` | XGBoost (60%) + Keras Sequential LSTM (30%) + Isolation Forest (10%) | `compressor_predictive_maintenance_model.pkl` in `backend/app/ml_models/compressor/` | **READY ✅** | Weighted tri-signal model bundle with scalers, threshold (0.56), and imputer verified and loadable. |
+| **Centrifugal Pump** | `pump` | XGBoost (75%) + Keras Sequential LSTM (15%) + Isolation Forest (10%) | `pump_predictive_maintenance.pkl` in `backend/app/ml_models/pump/` | **READY ✅** | Weighted tri-signal bundle with scalers, threshold (0.57), and imputer verified and operational. |
+| **Robotic Arm** | `robotic_arm` | XGBoost + Isolation Forest + LSTM | `backend/app/ml_models/robotic_arm/` | **DISABLED ⏸️** | Temporarily disabled per configuration. |
 | **Electric Motor** | `electric_motor` | Tri-Signal Architecture (TBD) | **None found on disk** | **BLOCKED 🛑** | Awaiting Colab training artifacts. Model status: explicitly unavailable. |
-| **Centrifugal Pump** | `pump` | Tri-Signal Architecture (TBD) | **None found on disk** | **BLOCKED 🛑** | Awaiting Colab training artifacts. Model status: explicitly unavailable. |
 
 ---
 

@@ -25,19 +25,19 @@ export function Dashboard(): React.ReactElement {
   const { data: equipment = [], isLoading: eqLoading, error: eqError, refetch } = useQuery({
     queryKey: ['equipment'],
     queryFn: () => fetchEquipment(),
-    refetchInterval: 30000,
+    refetchInterval: 3000,
   });
 
   const { isLoading: sumLoading } = useQuery({
     queryKey: ['analyticsSummary'],
     queryFn: fetchAnalyticsSummary,
-    refetchInterval: 30000,
+    refetchInterval: 3000,
   });
 
   const { data: typeMetrics = [], isLoading: metricsLoading } = useQuery({
     queryKey: ['equipmentTypeMetrics'],
     queryFn: fetchEquipmentTypeMetrics,
-    refetchInterval: 30000,
+    refetchInterval: 3000,
   });
 
   const filteredEquipment = categoryFilter

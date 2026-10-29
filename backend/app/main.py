@@ -18,6 +18,8 @@ from app.api.maintenance import router as maintenance_router
 from app.api.analytics import router as analytics_router
 from app.api.ml import router as ml_router
 
+from app.services.telemetry_streamer import start_telemetry_streamer, stop_telemetry_streamer
+
 load_dotenv()
 
 app = FastAPI(
@@ -25,6 +27,14 @@ app = FastAPI(
     description="Predictive Maintenance Platform — REST API",
     version="0.2.0",
 )
+
+@app.on_event("startup")
+async def on_startup():
+    start_telemetry_streamer()
+
+@app.on_event("shutdown")
+async def on_shutdown():
+    stop_telemetry_streamer()
 
 # ─── CORS ─────────────────────────────────────────────────────────────────────
 allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173")

@@ -16,6 +16,7 @@ import { RULCard } from '../components/shared/RULCard';
 import { AlertPanel } from '../components/shared/AlertPanel';
 import { MaintenancePanel } from '../components/shared/MaintenancePanel';
 import { MLModelPlayground } from '../components/shared/MLModelPlayground';
+import { RealTimeHealthMonitor } from '../components/shared/RealTimeHealthMonitor';
 import { LoadingSpinner, SkeletonCard, SkeletonSensorGrid, ErrorState } from '../components/shared/Feedback';
 import { useWorkOrderStore } from '../store/workOrderStore';
 import equipmentConfig from '../config/equipmentConfig';
@@ -49,14 +50,14 @@ export function EquipmentDetails(): React.ReactElement {
     queryKey: ['currentReadings', id],
     queryFn: () => fetchCurrentReadings(id!),
     enabled: !!id,
-    refetchInterval: 5000,
+    refetchInterval: 2500,
   });
 
   const { data: prediction, isLoading: predLoading } = useQuery({
     queryKey: ['predictions', id],
     queryFn: () => fetchPredictions(id!),
     enabled: !!id,
-    refetchInterval: 30000,
+    refetchInterval: 2500,
   });
 
   const { data: allAlerts = [] } = useQuery({
@@ -131,20 +132,39 @@ export function EquipmentDetails(): React.ReactElement {
       {/* ── 1. Equipment Header (status visible) ──────────────────────────── */}
       <EquipmentHeader equipment={equipment} />
 
+      {/* ── Real-Time Streaming Visual Monitor & Continuous ML Graph ───── */}
+      <RealTimeHealthMonitor
+        equipment={equipment}
+        prediction={prediction ?? null}
+        isLoading={predLoading}
+      />
+
       {/* ── 2. Health Score + 3. RUL + alerts count ──────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Health Score */}
         <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-5 flex flex-col items-center justify-center text-center">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-4">
-            Health Score
-          </p>
-          <HealthScoreCard score={equipment.healthScore} size="lg" />
+          <div className="flex items-center gap-1.5 mb-3">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
+              Live Health Score
+            </p>
+            {prediction?.isRealModel && (
+              <span className="text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded px-1.5 py-0.5">
+                AI Model
+              </span>
+            )}
+          </div>
+          <HealthScoreCard score={prediction?.healthScore ?? equipment.healthScore} size="lg" />
           <p className="text-xs text-slate-500 mt-4">
-            Trend: <span className={clsx(
-              equipment.healthScore >= 90 ? 'text-emerald-400' :
-              equipment.healthScore >= 70 ? 'text-amber-400' : 'text-red-400',
+            Status:{' '}
+            <span className={clsx(
+              (prediction?.healthScore ?? equipment.healthScore) >= 80 ? 'text-emerald-400' :
+              (prediction?.healthScore ?? equipment.healthScore) >= 60 ? 'text-amber-400' : 'text-red-400',
+              'font-semibold'
             )}>
-              {equipment.healthScore >= 90 ? 'Stable' : equipment.healthScore >= 70 ? 'Degrading' : 'Declining'}
+              {prediction?.healthStatus ?? (
+                (prediction?.healthScore ?? equipment.healthScore) >= 80 ? 'Healthy' :
+                (prediction?.healthScore ?? equipment.healthScore) >= 60 ? 'Warning' : 'Critical'
+              )}
             </span>
           </p>
         </div>

@@ -14,12 +14,10 @@ type SortBy = 'healthScore' | 'name' | 'id' | 'operatingHours';
 type ViewMode = 'grid' | 'list';
 
 const TYPE_FILTERS: { value: EquipmentType | ''; label: string }[] = [
-  { value: '', label: 'All Types' },
-  { value: 'robotic_arm',    label: 'Robotic Arm' },
-  { value: 'electric_motor', label: 'Electric Motor' },
-  { value: 'pump',           label: 'Pump' },
-  { value: 'compressor',     label: 'Compressor' },
+  { value: '', label: 'All Active ML Equipment' },
   { value: 'cnc_machine',    label: 'CNC Machine' },
+  { value: 'compressor',     label: 'Compressor' },
+  { value: 'pump',           label: 'Centrifugal Pump' },
 ];
 
 const STATUS_FILTERS: { value: EquipmentStatus | ''; label: string }[] = [
@@ -44,6 +42,7 @@ export function EquipmentList(): React.ReactElement {
   const { data: equipment = [], isLoading, error, refetch } = useQuery({
     queryKey: ['equipment'],
     queryFn: () => fetchEquipment(),
+    refetchInterval: 3000,
   });
 
   // Client-side filter + sort

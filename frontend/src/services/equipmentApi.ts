@@ -19,7 +19,9 @@ export async function fetchEquipment(filters?: EquipmentFilters): Promise<Equipm
   const qs = params.toString();
   const res = await fetch(`${API}/equipment${qs ? `?${qs}` : ''}`);
   if (!res.ok) throw new Error(`Failed to fetch equipment: ${res.status}`);
-  return res.json();
+  const list: Equipment[] = await res.json();
+  const ACTIVE_ML_TYPES = new Set(['cnc_machine', 'compressor', 'pump']);
+  return list.filter(e => ACTIVE_ML_TYPES.has(e.type));
 }
 
 export async function fetchEquipmentById(id: string): Promise<Equipment | null> {

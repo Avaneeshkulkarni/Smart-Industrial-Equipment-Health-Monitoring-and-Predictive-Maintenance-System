@@ -21,8 +21,10 @@ backend/venv
 backend/*.pyc
 backend/**/*.pyc
 *.db
+*.db*
 *.sqlite*
 backend/*.db
+backend/*.db*
 
 # ─── ML ───────────────────────────────────────────────────────────────────────
 ml/models/*.pkl
