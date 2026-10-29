@@ -28,7 +28,7 @@ export function PredictionPanel({ prediction, className }: PredictionPanelProps)
   const sortedFaults = [...(prediction.faultPredictions || [])].sort((a, b) => b.probability - a.probability);
 
   return (
-    <div className={clsx('bg-slate-800/50 rounded-xl border border-slate-700/50 p-5 space-y-5', className)}>
+    <div className={clsx('industrial-card rounded-2xl border border-slate-800/90 p-5 md:p-6 space-y-5 shadow-xl', className)}>
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">

@@ -1,13 +1,13 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 /* ============================================================================
-   PredictX — Global CSS
-   Dark industrial-IoT monitoring aesthetic
-   Google Fonts: Inter (loaded via @import above)
+   PredictX — Enterprise Industrial IIoT System Design System
+   Aesthetic: Precision Industrial SCADA, Mission-Control Dark Theme
+   Typography: Inter (Primary UI) + JetBrains Mono (Telemetry & Metrics)
    ============================================================================ */
 
-/* ─── Base ─────────────────────────────────────────────────────────────────── */
+/* ─── Base Reset & Layout ──────────────────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
 }
@@ -15,61 +15,112 @@
 html {
   font-size: 16px;
   scroll-behavior: smooth;
+  color-scheme: dark;
 }
 
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: #020617; /* slate-950 */
+  background-color: #050811; /* Deep industrial carbon slate */
   color: #e2e8f0;            /* slate-200 */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
   margin: 0;
+  overflow-x: hidden;
 }
 
-/* Monospace elements */
-code, pre, .font-mono {
+/* Monospace & Telemetry Numbers */
+code, pre, .font-mono, .tabular-nums {
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-feature-settings: "tnum" 1, "cv05" 1;
 }
 
-/* ─── Custom scrollbar ─────────────────────────────────────────────────────── */
+/* ─── Industrial Grid Overlay ──────────────────────────────────────────────── */
+.industrial-grid-bg {
+  background-image: radial-gradient(rgba(59, 130, 246, 0.08) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+/* ─── Industrial Glass & Card Treatments ───────────────────────────────────── */
+.industrial-card {
+  background: rgba(13, 19, 33, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(51, 65, 85, 0.5);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.industrial-card:hover {
+  border-color: rgba(71, 85, 105, 0.8);
+}
+
+.industrial-card-glow {
+  position: relative;
+}
+.industrial-card-glow::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.5), transparent);
+}
+
+/* ─── Custom Precision Scrollbar ───────────────────────────────────────────── */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
-::-webkit-scrollbar-track  { background: #0f172a; }
-::-webkit-scrollbar-thumb  { background: #334155; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #475569; }
+::-webkit-scrollbar-track {
+  background: #090e17;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
 
-/* ─── Focus visible (accessibility) ───────────────────────────────────────── */
+/* ─── Accessibility & Focus ───────────────────────────────────────────────── */
 :focus-visible {
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
   border-radius: 4px;
 }
 
-/* ─── Animations ───────────────────────────────────────────────────────────── */
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0); }
+/* ─── Industrial Radar Beacon & Pulse Animations ───────────────────────────── */
+@keyframes radar-sweep {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
-  50%       { box-shadow: 0 0 12px 2px rgba(59, 130, 246, 0.3); }
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.4; transform: scale(0.9); }
 }
 
-.animate-fade-in {
-  animation: fade-in 0.2s ease-out;
+@keyframes beacon-ping {
+  0%   { transform: scale(0.95); opacity: 0.8; }
+  70%  { transform: scale(2.2); opacity: 0; }
+  100% { transform: scale(2.2); opacity: 0; }
 }
 
-.animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
+.animate-live-pulse {
+  animation: live-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* ─── Recharts overrides ───────────────────────────────────────────────────── */
+.animate-beacon-ping {
+  animation: beacon-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* ─── Recharts Styling ─────────────────────────────────────────────────────── */
 .recharts-wrapper {
   font-family: 'Inter', sans-serif;
+}
+
+.recharts-cartesian-grid line {
+  stroke: #1e293b !important;
 }
 
 .recharts-default-legend .recharts-legend-item-text {
@@ -77,14 +128,8 @@ code, pre, .font-mono {
   font-size: 11px !important;
 }
 
-/* ─── Table ────────────────────────────────────────────────────────────────── */
-table {
-  border-collapse: collapse;
-  width: 100%;
-}
-
 /* ─── Selection ────────────────────────────────────────────────────────────── */
 ::selection {
-  background: rgba(59, 130, 246, 0.3);
-  color: #e2e8f0;
+  background: rgba(59, 130, 246, 0.35);
+  color: #f8fafc;
 }

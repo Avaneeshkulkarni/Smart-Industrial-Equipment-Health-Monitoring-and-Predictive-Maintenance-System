@@ -17,14 +17,14 @@ interface SensorCardProps {
 }
 
 const SENSOR_STATUS_COLORS = {
-  healthy:  { text: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
-  warning:  { text: 'text-amber-400',   bg: 'bg-amber-500/10 border-amber-500/20'   },
-  critical: { text: 'text-red-400',     bg: 'bg-red-500/10 border-red-500/20'       },
+  healthy:  { text: 'text-emerald-400', bg: 'bg-slate-900/80 border-slate-800/90 hover:border-slate-700', badge: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+  warning:  { text: 'text-amber-400',   bg: 'bg-amber-950/20 border-amber-500/30 hover:border-amber-500/40', badge: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
+  critical: { text: 'text-red-400',     bg: 'bg-red-950/20 border-red-500/30 hover:border-red-500/40', badge: 'text-red-400 bg-red-500/10 border-red-500/20' },
 };
 
 /**
- * SensorCard — shows parameter name, current value + unit, status, trend, optional sparkline.
- * Only renders parameters that belong to the equipment type (caller is responsible for filtering).
+ * Enterprise SensorCard
+ * Precision industrial telemetry display with sparklines and threshold metrics.
  */
 export function SensorCard({
   parameter,
@@ -69,82 +69,86 @@ export function SensorCard({
     ? value.toFixed(parameter.decimalPlaces)
     : value.toFixed(1);
 
-  const sparkColor = status === 'healthy' ? '#34d399' : status === 'warning' ? '#fbbf24' : '#f87171';
+  const sparkColor = status === 'healthy' ? '#10b981' : status === 'warning' ? '#f59e0b' : '#ef4444';
 
   return (
     <div
       className={clsx(
-        'rounded-xl border p-4 flex flex-col gap-2 transition-all hover:border-slate-600',
+        'industrial-card rounded-xl border p-4 flex flex-col justify-between transition-all duration-200 shadow-md',
         colors.bg,
         className,
       )}
       role="region"
       aria-label={`${parameter.label} sensor reading`}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-xs text-slate-400 font-medium uppercase tracking-wide">
-          {parameter.label}
-        </span>
-        <TrendIcon
-          size={13}
-          className={clsx(
-            trend === 'up'   ? (status === 'healthy' ? 'text-emerald-400' : 'text-red-400') :
-            trend === 'down' ? 'text-emerald-400' :
-            'text-slate-500'
-          )}
-          aria-label={`Trend: ${trend}`}
-        />
-      </div>
-
-      {/* Value */}
-      <div className="flex items-baseline gap-1.5">
-        <span className={clsx('text-2xl font-bold tabular-nums', colors.text)}>
-          {formattedValue}
-        </span>
-        {parameter.unit && (
-          <span className="text-sm text-slate-400">{parameter.unit}</span>
-        )}
-      </div>
-
-      {/* Thresholds */}
-      <div className="flex items-center gap-2 text-xs text-slate-500">
-        <span>Warn: {parameter.warningThreshold}</span>
-        <span className="text-slate-600">|</span>
-        <span>Crit: {parameter.criticalThreshold}</span>
-      </div>
-
-      {/* Sparkline */}
-      {showSparkline && sparklineData.length > 0 && (
-        <div className="h-10 -mx-1">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={sparklineData}>
-              <Line
-                type="monotone"
-                dataKey="v"
-                stroke={sparkColor}
-                strokeWidth={1.5}
-                dot={false}
-                isAnimationActive={false}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+      <div>
+        {/* Header */}
+        <div className="flex items-center justify-between gap-2 mb-1.5">
+          <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider truncate">
+            {parameter.label}
+          </span>
+          <div className="flex items-center gap-1.5">
+            <TrendIcon
+              size={13}
+              className={clsx(
+                trend === 'up'   ? (status === 'healthy' ? 'text-emerald-400' : 'text-red-400') :
+                trend === 'down' ? 'text-emerald-400' :
+                'text-slate-500'
+              )}
+              aria-label={`Trend: ${trend}`}
+            />
+          </div>
         </div>
-      )}
 
-      {/* Status */}
-      <div className="flex items-center gap-1.5">
-        <span
-          className={clsx('w-1.5 h-1.5 rounded-full', {
-            'bg-emerald-400': status === 'healthy',
-            'bg-amber-400': status === 'warning',
-            'bg-red-400': status === 'critical',
-          })}
-          aria-hidden="true"
-        />
-        <span className={clsx('text-xs font-medium capitalize', colors.text)}>
-          {status}
-        </span>
+        {/* Current Value */}
+        <div className="flex items-baseline gap-1.5 my-1">
+          <span className={clsx('text-2xl font-black font-mono tracking-tight tabular-nums', colors.text)}>
+            {formattedValue}
+          </span>
+          {parameter.unit && (
+            <span className="text-xs font-mono text-slate-400 font-semibold">{parameter.unit}</span>
+          )}
+        </div>
+
+        {/* Threshold limits */}
+        <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400 mt-1">
+          <span>Warn: {parameter.warningThreshold}</span>
+          <span className="text-slate-700">|</span>
+          <span>Crit: {parameter.criticalThreshold}</span>
+        </div>
+      </div>
+
+      <div>
+        {/* Sparkline mini-graph */}
+        {showSparkline && sparklineData.length > 0 && (
+          <div className="h-8 -mx-1 my-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={sparklineData}>
+                <Line
+                  type="monotone"
+                  dataKey="v"
+                  stroke={sparkColor}
+                  strokeWidth={1.5}
+                  dot={false}
+                  isAnimationActive={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* Status indicator bar */}
+        <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 text-[10px]">
+          <span className={clsx('flex items-center gap-1 font-semibold uppercase font-mono', colors.text)}>
+            <span className={clsx('w-1.5 h-1.5 rounded-full', {
+              'bg-emerald-400': status === 'healthy',
+              'bg-amber-400': status === 'warning',
+              'bg-red-400': status === 'critical',
+            })} />
+            {status}
+          </span>
+          <span className="text-slate-400 font-mono">Live</span>
+        </div>
       </div>
     </div>
   );

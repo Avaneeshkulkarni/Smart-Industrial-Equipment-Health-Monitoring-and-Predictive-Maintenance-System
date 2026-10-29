@@ -16,18 +16,6 @@ interface AlertPanelProps {
   className?: string;
 }
 
-const SEVERITY_BORDER = {
-  critical: 'border-l-red-500',
-  warning:  'border-l-amber-500',
-  info:     'border-l-blue-500',
-};
-
-const SEVERITY_BG = {
-  critical: 'bg-red-500/5',
-  warning:  'bg-amber-500/5',
-  info:     'bg-blue-500/5',
-};
-
 const SEVERITY_ICONS = {
   critical: XCircle,
   warning:  AlertTriangle,
@@ -51,61 +39,63 @@ export function AlertPanel({
 
   if (displayed.length === 0) {
     return (
-      <div className={clsx('bg-slate-800/50 rounded-xl border border-slate-700/50 p-8 text-center', className)}>
-        <CheckCircle size={32} className="text-emerald-500 mx-auto mb-2" />
-        <p className="text-sm font-medium text-slate-300">No active alerts</p>
-        <p className="text-xs text-slate-500 mt-1">This equipment is operating normally.</p>
+      <div className={clsx('industrial-card rounded-2xl border border-slate-800/80 p-8 text-center', className)}>
+        <CheckCircle size={32} className="text-emerald-400 mx-auto mb-2 opacity-90" />
+        <p className="text-xs font-mono font-bold uppercase tracking-wider text-slate-200">NO ACTIVE ALARMS DETECTED</p>
+        <p className="text-xs font-mono text-slate-500 mt-1">All monitored subsystem telemetry channels within nominal operating thresholds.</p>
       </div>
     );
   }
 
   return (
-    <div className={clsx('space-y-2', className)}>
+    <div className={clsx('space-y-2.5', className)}>
       {displayed.map(alert => {
         const Icon = SEVERITY_ICONS[alert.severity] ?? AlertTriangle;
         return (
           <div
             key={alert.id}
             className={clsx(
-              'rounded-xl border border-slate-700/50 border-l-2 p-4 transition-all',
-              SEVERITY_BORDER[alert.severity],
-              SEVERITY_BG[alert.severity],
+              'rounded-xl border border-slate-800/90 border-l-4 p-4 transition-all shadow-md',
+              alert.severity === 'critical' ? 'border-l-rose-500 bg-rose-950/10' :
+              alert.severity === 'warning'  ? 'border-l-amber-500 bg-amber-950/10' :
+              'border-l-cyan-500 bg-cyan-950/10',
               alert.status !== 'active' && 'opacity-60',
             )}
           >
             <div className="flex items-start gap-3">
               <Icon
-                size={16}
+                size={17}
                 className={clsx(
                   'flex-shrink-0 mt-0.5',
-                  alert.severity === 'critical' ? 'text-red-400' :
-                  alert.severity === 'warning'  ? 'text-amber-400' : 'text-blue-400',
+                  alert.severity === 'critical' ? 'text-rose-400' :
+                  alert.severity === 'warning'  ? 'text-amber-400' : 'text-cyan-400',
                 )}
                 aria-hidden="true"
               />
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-1">
-                  <span className="text-sm font-semibold text-slate-200">{alert.title}</span>
+                  <span className="text-xs font-mono text-slate-500">[{alert.id.slice(0, 8)}]</span>
+                  <span className="text-sm font-semibold text-slate-100">{alert.title}</span>
                   <StatusBadge status={alert.severity} size="sm" />
                   {alert.status !== 'active' && (
-                    <span className="text-xs text-slate-500 bg-slate-700/50 px-1.5 py-0.5 rounded capitalize">
+                    <span className="text-[10px] font-mono text-slate-400 bg-slate-900 border border-slate-800 px-1.5 py-0.5 rounded uppercase">
                       {alert.status}
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-slate-400 leading-relaxed mb-2">{alert.message}</p>
-                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
-                  <span>{getRelativeTime(alert.triggeredAt)}</span>
+                <p className="text-xs text-slate-400 leading-relaxed mb-2 font-sans">{alert.message}</p>
+                <div className="flex flex-wrap items-center gap-3 text-[11px] font-mono text-slate-500">
+                  <span>TIME: <span className="text-slate-300">{getRelativeTime(alert.triggeredAt)}</span></span>
                   {alert.parameterKey && (
                     <span>
-                      {alert.parameterKey}: <span className="text-slate-300">{alert.parameterValue?.toFixed(2)}</span>
-                      {' '}(threshold: {alert.threshold})
+                      {alert.parameterKey.toUpperCase()}: <span className="text-slate-200 font-semibold">{alert.parameterValue?.toFixed(2)}</span>
+                      {' '}(LIMIT: <span className="text-amber-400">{alert.threshold}</span>)
                     </span>
                   )}
                   {!equipmentId && (
                     <Link
                       to={`/equipment/${alert.equipmentId}`}
-                      className="flex items-center gap-1 text-blue-400 hover:text-blue-300 transition-colors"
+                      className="flex items-center gap-1 text-cyan-400 hover:text-cyan-300 transition-colors uppercase"
                     >
                       {alert.equipmentName}
                       <ChevronRight size={10} />
@@ -116,23 +106,23 @@ export function AlertPanel({
 
               {/* Actions */}
               {showActions && alert.status === 'active' && (
-                <div className="flex flex-col gap-1 flex-shrink-0">
+                <div className="flex flex-col gap-1.5 flex-shrink-0">
                   {onAcknowledge && (
                     <button
                       onClick={() => onAcknowledge(alert.id)}
-                      className="text-xs px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded transition-colors"
+                      className="text-[11px] font-mono font-semibold px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 rounded transition-colors"
                       aria-label={`Acknowledge alert: ${alert.title}`}
                     >
-                      Acknowledge
+                      ACK
                     </button>
                   )}
                   {onResolve && (
                     <button
                       onClick={() => onResolve(alert.id)}
-                      className="text-xs px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded transition-colors"
+                      className="text-[11px] font-mono font-semibold px-2.5 py-1 bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-400 border border-emerald-500/30 rounded transition-colors"
                       aria-label={`Resolve alert: ${alert.title}`}
                     >
-                      Resolve
+                      RESOLVE
                     </button>
                   )}
                 </div>

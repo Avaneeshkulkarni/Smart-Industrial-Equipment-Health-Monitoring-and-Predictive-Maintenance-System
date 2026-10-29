@@ -50,28 +50,28 @@ export function MaintenancePanel({
       {/* Recommendations */}
       {sortedRecs.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">
-            Maintenance Recommendations
+          <h4 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider mb-3">
+            Predictive Maintenance Recommendations
           </h4>
           <div className="space-y-3">
             {sortedRecs.map(rec => (
               <div
                 key={rec.id}
-                className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4"
+                className="industrial-card rounded-2xl border border-slate-800/80 p-5 shadow-lg"
               >
                 <div className="flex flex-wrap items-start gap-2 mb-2">
-                  <span className="flex-1 text-sm font-semibold text-slate-200">{rec.title}</span>
-                  <span className={clsx('text-xs px-2 py-0.5 rounded-full border font-medium capitalize', PRIORITY_COLORS[rec.priority])}>
+                  <span className="flex-1 text-sm font-semibold text-slate-100">{rec.title}</span>
+                  <span className={clsx('text-[10px] font-mono font-bold px-2 py-0.5 rounded border uppercase', PRIORITY_COLORS[rec.priority])}>
                     {rec.priority}
                   </span>
                 </div>
-                <p className="text-xs text-slate-400 leading-relaxed mb-3">{rec.description}</p>
-                <div className="flex flex-wrap gap-4 text-xs text-slate-500">
+                <p className="text-xs text-slate-400 leading-relaxed mb-3 font-sans">{rec.description}</p>
+                <div className="flex flex-wrap gap-4 text-xs font-mono text-slate-400 bg-slate-950/40 p-2.5 rounded-lg border border-slate-800/60">
                   {rec.estimatedCost && (
-                    <span>Est. cost: <span className="text-slate-300">${rec.estimatedCost.toLocaleString()}</span></span>
+                    <span>EST. COST: <span className="text-emerald-400 font-semibold">${rec.estimatedCost.toLocaleString()}</span></span>
                   )}
                   {rec.estimatedDowntime && (
-                    <span>Est. downtime: <span className="text-slate-300">{rec.estimatedDowntime}h</span></span>
+                    <span>EST. DOWNTIME: <span className="text-amber-400 font-semibold">{rec.estimatedDowntime}h</span></span>
                   )}
                 </div>
               </div>
@@ -83,55 +83,55 @@ export function MaintenancePanel({
       {/* Work Orders */}
       {workOrders.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">
-            Work Orders
+          <h4 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider mb-3">
+            Active Work Orders & Dispatch
           </h4>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {workOrders.map(wo => {
               const nextStatus = STATUS_TRANSITIONS[wo.status];
               return (
                 <div
                   key={wo.id}
-                  className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4"
+                  className="industrial-card rounded-2xl border border-slate-800/80 p-5 shadow-lg"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
                     <div>
-                      <span className="text-xs text-slate-500 font-mono">{wo.id}</span>
-                      <p className="text-sm font-medium text-slate-200 mt-0.5">{wo.issue}</p>
+                      <span className="text-[11px] text-cyan-400 font-mono font-bold">[{wo.id}]</span>
+                      <p className="text-sm font-semibold text-slate-100 mt-0.5">{wo.issue}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={clsx('text-xs px-2 py-0.5 rounded-full border font-medium capitalize', PRIORITY_COLORS[wo.priority])}>
+                      <span className={clsx('text-[10px] font-mono font-bold px-2 py-0.5 rounded border uppercase', PRIORITY_COLORS[wo.priority])}>
                         {wo.priority}
                       </span>
-                      <span className={clsx('text-xs px-2 py-0.5 rounded-full font-medium capitalize', STATUS_COLORS[wo.status])}>
+                      <span className={clsx('text-[10px] font-mono font-bold px-2 py-0.5 rounded uppercase', STATUS_COLORS[wo.status])}>
                         {wo.status}
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-3 text-xs text-slate-400 mb-3">
+                  <div className="flex flex-wrap gap-3 text-xs font-mono text-slate-400 mb-3">
                     {wo.technician && (
-                      <span className="flex items-center gap-1">
-                        <User size={10} aria-hidden="true" />
-                        {wo.technician}
+                      <span className="flex items-center gap-1.5">
+                        <User size={11} className="text-slate-500" aria-hidden="true" />
+                        TECH: <span className="text-slate-200">{wo.technician}</span>
                       </span>
                     )}
                     {wo.scheduledDate && (
-                      <span className="flex items-center gap-1">
-                        <Calendar size={10} aria-hidden="true" />
-                        Scheduled: {wo.scheduledDate}
+                      <span className="flex items-center gap-1.5">
+                        <Calendar size={11} className="text-slate-500" aria-hidden="true" />
+                        DATE: <span className="text-slate-200">{wo.scheduledDate}</span>
                       </span>
                     )}
                     {wo.estimatedDuration && (
-                      <span className="flex items-center gap-1">
-                        <Clock size={10} aria-hidden="true" />
-                        Est: {wo.estimatedDuration}h
+                      <span className="flex items-center gap-1.5">
+                        <Clock size={11} className="text-slate-500" aria-hidden="true" />
+                        DURATION: <span className="text-slate-200">{wo.estimatedDuration}h</span>
                       </span>
                     )}
                   </div>
 
                   {wo.notes && (
-                    <p className="text-xs text-slate-500 bg-slate-900/50 rounded px-2 py-1.5 mb-3">
+                    <p className="text-xs font-sans text-slate-400 bg-slate-950/60 border border-slate-800/80 rounded-lg p-2.5 mb-3">
                       {wo.notes}
                     </p>
                   )}
@@ -139,10 +139,10 @@ export function MaintenancePanel({
                   {onUpdateStatus && nextStatus && (
                     <button
                       onClick={() => onUpdateStatus(wo.id, nextStatus)}
-                      className="text-xs px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/40 border border-blue-600/30 text-blue-400 rounded transition-colors"
+                      className="text-xs font-mono font-semibold px-3 py-1.5 bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-500/30 text-cyan-300 rounded-lg transition-colors uppercase tracking-wider"
                       aria-label={`Advance work order ${wo.id} to ${nextStatus}`}
                     >
-                      Mark as {nextStatus.replace('-', ' ')}
+                      Advance → {nextStatus.replace('-', ' ')}
                     </button>
                   )}
                 </div>

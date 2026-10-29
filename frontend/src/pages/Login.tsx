@@ -50,75 +50,83 @@ export function Login(): React.ReactElement {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-      {/* Background grid pattern */}
-      <div
-        className="fixed inset-0 opacity-20 pointer-events-none"
-        style={{
-          backgroundImage: 'linear-gradient(rgba(59,130,246,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.1) 1px, transparent 1px)',
-          backgroundSize: '40px 40px',
-        }}
-        aria-hidden="true"
-      />
+    <div className="min-h-screen bg-[#050811] text-slate-100 flex items-center justify-center p-4 relative overflow-hidden industrial-grid-bg">
+      {/* Background ambient lighting */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="relative w-full max-w-4xl grid lg:grid-cols-2 gap-8 items-center">
+      <div className="relative w-full max-w-4xl grid lg:grid-cols-2 gap-8 items-center z-10">
 
-        {/* ─── Left: Brand ─────────────────────────────────────── */}
-        <div className="hidden lg:block">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+        {/* ─── Left: Brand & Telemetry Mission Control ───────────── */}
+        <div className="hidden lg:block space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 border border-cyan-400/30">
               <Zap size={24} className="text-white" aria-hidden="true" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-100">
-                Predict<span className="text-blue-400">X</span>
-              </h1>
-              <p className="text-sm text-slate-400">Predictive Maintenance Platform</p>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold tracking-tight text-white font-mono">
+                  PREDICT<span className="text-cyan-400">X</span>
+                </h1>
+                <span className="text-[10px] font-mono uppercase bg-cyan-950/60 text-cyan-400 border border-cyan-800/80 rounded px-1.5 py-0.5">
+                  SCADA v2.4
+                </span>
+              </div>
+              <p className="text-xs font-mono text-slate-400">ENTERPRISE IIoT MONITORING & PREDICTIVE MAINTENANCE</p>
             </div>
           </div>
 
-          <h2 className="text-3xl font-bold text-slate-100 mb-4 leading-tight">
-            Industrial Equipment<br />
-            <span className="text-blue-400">Health Intelligence</span>
-          </h2>
+          <div className="space-y-2">
+            <h2 className="text-3xl font-extrabold text-white tracking-tight leading-tight">
+              Subsystem Telemetry &<br />
+              <span className="bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-400 bg-clip-text text-transparent">
+                Continuous ML Inference
+              </span>
+            </h2>
+            <p className="text-slate-400 text-xs font-mono leading-relaxed">
+              Real-time Brownian sensor telemetry, 2.5s streaming inference loop, and automated remaining useful life (RUL) estimation across critical manufacturing machinery.
+            </p>
+          </div>
 
-          <p className="text-slate-400 text-sm leading-relaxed mb-8">
-            Real-time sensor monitoring, anomaly detection, fault diagnosis, and remaining useful
-            life estimation for your manufacturing plant's critical equipment.
-          </p>
-
-          <div className="space-y-3">
+          <div className="space-y-2.5 pt-2">
             {[
-              { icon: ShieldCheck, text: 'Fault detection across 12 machines, 4 equipment types' },
-              { icon: Zap,         text: 'Live sensor data with 2–5s refresh simulation' },
-              { icon: Lock,        text: 'Role-based access: Manager, Maintenance, Operator, Admin' },
+              { icon: ShieldCheck, text: 'Continuous Multi-Signal Model Inference (XGBoost + IsoForest + LSTM)' },
+              { icon: Zap,         text: 'Live 2.5s Brownian Telemetry Drift Simulation' },
+              { icon: Lock,        text: 'Role-Gated Plant Operations: Manager, Maintenance, Operator, Admin' },
             ].map(({ icon: Icon, text }) => (
-              <div key={text} className="flex items-start gap-3 text-sm text-slate-400">
-                <Icon size={16} className="text-blue-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
+              <div key={text} className="flex items-center gap-3 text-xs font-mono text-slate-300 bg-slate-900/40 p-2.5 rounded-lg border border-slate-800/60">
+                <Icon size={15} className="text-cyan-400 flex-shrink-0" aria-hidden="true" />
                 <span>{text}</span>
               </div>
             ))}
           </div>
+
+          <div className="flex items-center gap-2 text-[11px] font-mono text-slate-500 pt-2 border-t border-slate-800/60">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>CENTRAL SCADA INFERENCE NODE: ONLINE</span>
+          </div>
         </div>
 
-        {/* ─── Right: Login form ────────────────────────────────── */}
-        <div className="bg-slate-900 border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
+        {/* ─── Right: Industrial Login form ─────────────────────── */}
+        <div className="industrial-card rounded-2xl border border-slate-800/90 p-8 shadow-2xl backdrop-blur-xl">
           {/* Mobile logo */}
           <div className="flex items-center gap-2 mb-6 lg:hidden">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-cyan-600 flex items-center justify-center">
               <Zap size={16} className="text-white" aria-hidden="true" />
             </div>
-            <span className="font-bold text-slate-100">Predict<span className="text-blue-400">X</span></span>
+            <span className="font-bold text-white font-mono">PREDICT<span className="text-cyan-400">X</span></span>
           </div>
 
-          <h2 className="text-xl font-bold text-slate-100 mb-1">Sign in</h2>
-          <p className="text-sm text-slate-400 mb-6">Access the maintenance platform</p>
+          <div className="border-b border-slate-800/80 pb-4 mb-5">
+            <h2 className="text-lg font-bold font-mono text-white tracking-wide">OPERATOR ACCESS GATEWAY</h2>
+            <p className="text-xs font-mono text-slate-400 mt-0.5">Authenticate credentials to access plant supervisory node</p>
+          </div>
 
           <form onSubmit={handleLogin} noValidate className="space-y-4">
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-xs font-medium text-slate-400 mb-1.5">
-                Email address
+              <label htmlFor="email" className="block text-[11px] font-mono uppercase tracking-wider text-slate-400 mb-1.5">
+                Operator Identifier / Email
               </label>
               <div className="relative">
                 <User size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" aria-hidden="true" />
@@ -127,8 +135,8 @@ export function Login(): React.ReactElement {
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-blue-500 transition-colors"
-                  placeholder="you@predictx.io"
+                  className="w-full bg-slate-950/70 border border-slate-800 text-slate-200 rounded-lg pl-9 pr-3 py-2 text-xs font-mono focus:outline-none focus:border-cyan-500 transition-colors"
+                  placeholder="operator@predictx.io"
                   autoComplete="email"
                   required
                 />
@@ -137,8 +145,8 @@ export function Login(): React.ReactElement {
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-xs font-medium text-slate-400 mb-1.5">
-                Password
+              <label htmlFor="password" className="block text-[11px] font-mono uppercase tracking-wider text-slate-400 mb-1.5">
+                Passcode / Access Key
               </label>
               <div className="relative">
                 <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" aria-hidden="true" />
@@ -147,7 +155,7 @@ export function Login(): React.ReactElement {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 text-slate-200 rounded-lg pl-9 pr-9 py-2.5 text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-slate-950/70 border border-slate-800 text-slate-200 rounded-lg pl-9 pr-9 py-2 text-xs font-mono focus:outline-none focus:border-cyan-500 transition-colors"
                   placeholder="••••••••"
                   autoComplete="current-password"
                   required
@@ -165,28 +173,25 @@ export function Login(): React.ReactElement {
 
             {/* Role selector */}
             <div>
-              <label htmlFor="role" className="block text-xs font-medium text-slate-400 mb-1.5">
-                Role
+              <label htmlFor="role" className="block text-[11px] font-mono uppercase tracking-wider text-slate-400 mb-1.5">
+                Security Authorization Role
               </label>
               <select
                 id="role"
                 value={role}
                 onChange={e => setRole(e.target.value as UserRole)}
-                className="w-full bg-slate-800 border border-slate-700 text-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full bg-slate-950/70 border border-slate-800 text-slate-200 rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:border-cyan-500 transition-colors"
                 aria-label="Select your role"
               >
                 {ROLES.map(r => (
-                  <option key={r.value} value={r.value}>{r.label}</option>
+                  <option key={r.value} value={r.value} className="bg-slate-900 text-slate-200">{r.label} — {r.description}</option>
                 ))}
               </select>
-              <p className="text-xs text-slate-500 mt-1">
-                {ROLES.find(r => r.value === role)?.description}
-              </p>
             </div>
 
             {/* Error */}
             {error && (
-              <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 text-sm text-red-400" role="alert">
+              <div className="bg-rose-950/30 border border-rose-500/40 rounded-lg px-3 py-2 text-xs font-mono text-rose-400" role="alert">
                 {error}
               </div>
             )}
@@ -196,31 +201,37 @@ export function Login(): React.ReactElement {
               type="submit"
               disabled={loading}
               className={clsx(
-                'w-full py-2.5 rounded-lg text-sm font-semibold transition-all',
+                'w-full py-2.5 rounded-lg text-xs font-mono font-bold uppercase tracking-wider transition-all shadow-lg',
                 loading
-                  ? 'bg-blue-700 text-blue-300 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20',
+                  ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                  : 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-cyan-500/20 active:translate-y-0.5',
               )}
               aria-busy={loading}
             >
-              {loading ? 'Signing in…' : 'Sign in'}
+              {loading ? 'AUTHENTICATING TOKEN…' : 'INITIALIZE SESSION →'}
             </button>
           </form>
 
-          {/* Demo credentials */}
-          <div className="mt-6 bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
-            <p className="text-xs font-semibold text-slate-400 mb-2">Demo Credentials</p>
-            <div className="space-y-1">
+          {/* Quick Demo Credentials */}
+          <div className="mt-5 bg-slate-950/60 rounded-xl p-3.5 border border-slate-800/80">
+            <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 mb-2">
+              Quick Preset Operator Profiles
+            </p>
+            <div className="grid grid-cols-2 gap-1.5">
               {DEMO_CREDENTIALS.map(c => (
                 <button
                   key={c.email}
                   onClick={() => { setEmail(c.email); setPassword(c.password); setRole(c.role); }}
-                  className="w-full text-left text-xs text-slate-400 hover:text-slate-200 transition-colors flex items-center gap-2 py-1 rounded hover:bg-slate-700/50 px-1"
+                  className={clsx(
+                    'text-left text-[11px] font-mono px-2 py-1.5 rounded border transition-colors flex flex-col',
+                    email === c.email
+                      ? 'border-cyan-500/50 bg-cyan-950/30 text-cyan-300'
+                      : 'border-slate-800/80 bg-slate-900/40 text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+                  )}
                   aria-label={`Use ${c.role} credentials`}
                 >
-                  <span className="text-blue-400 font-mono">{c.email}</span>
-                  <span className="text-slate-600">·</span>
-                  <span>demo123</span>
+                  <span className="font-semibold text-slate-200 uppercase text-[10px]">{c.role}</span>
+                  <span className="truncate text-slate-400">{c.email}</span>
                 </button>
               ))}
             </div>

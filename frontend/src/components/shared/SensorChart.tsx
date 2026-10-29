@@ -49,30 +49,35 @@ export function SensorChart({
   })();
 
   return (
-    <div className={clsx('bg-slate-800/50 rounded-xl border border-slate-700/50 p-4', className)}>
+    <div className={clsx('industrial-card rounded-2xl border border-slate-800/80 p-5 shadow-lg', className)}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4 gap-4 flex-wrap">
         <div>
-          <h3 className="text-sm font-semibold text-slate-200">{parameter.label}</h3>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Current: <span className="text-slate-300">{stats.current} {parameter.unit}</span>
-            {' '}· Avg: <span className="text-slate-300">{stats.avg}</span>
-            {' '}· Min: <span className="text-slate-300">{stats.min}</span>
-            {' '}· Max: <span className="text-slate-300">{stats.max}</span>
+          <div className="flex items-center gap-2">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200">{parameter.label}</h3>
+            <span className="text-[10px] font-mono text-cyan-400 bg-cyan-950/40 border border-cyan-800/50 rounded px-1.5 py-0.2">
+              HISTORICAL
+            </span>
+          </div>
+          <p className="text-[11px] font-mono text-slate-400 mt-1">
+            CUR: <span className="text-slate-100 font-semibold">{stats.current} {parameter.unit}</span>
+            {' '}· AVG: <span className="text-slate-300">{stats.avg}</span>
+            {' '}· MIN: <span className="text-slate-300">{stats.min}</span>
+            {' '}· MAX: <span className="text-slate-300">{stats.max}</span>
           </p>
         </div>
 
         {/* Time window toggle */}
-        <div className="flex items-center gap-1 bg-slate-900/50 rounded-lg p-1">
+        <div className="flex items-center gap-1 bg-slate-950/80 border border-slate-800/80 rounded-lg p-1">
           {TIME_WINDOWS.map(w => (
             <button
               key={w}
               onClick={() => setWindow(w)}
               className={clsx(
-                'px-2.5 py-1 rounded text-xs font-medium transition-all',
+                'px-2 py-0.5 rounded text-[11px] font-mono font-semibold transition-all',
                 window === w
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50',
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50',
               )}
               aria-pressed={window === w}
               aria-label={`Show ${w} data`}

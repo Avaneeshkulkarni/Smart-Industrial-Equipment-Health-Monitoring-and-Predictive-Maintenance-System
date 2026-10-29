@@ -119,15 +119,27 @@ export function EquipmentDetails(): React.ReactElement {
 
   return (
     <div className="space-y-6">
-      {/* Back nav */}
-      <button
-        onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-200 transition-colors -mt-1"
-        aria-label="Go back"
-      >
-        <ArrowLeft size={16} aria-hidden="true" />
-        Back to Equipment
-      </button>
+      {/* Supervisory Breadcrumb Navigation */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => navigate(-1)}
+          className="group flex items-center gap-2 text-xs font-mono text-slate-400 hover:text-cyan-400 transition-colors -mt-1"
+          aria-label="Go back"
+        >
+          <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" aria-hidden="true" />
+          <span>PLANT SUPERVISORY</span>
+          <span className="text-slate-600">/</span>
+          <span>FLEET ASSETS</span>
+          <span className="text-slate-600">/</span>
+          <span className="text-slate-200 font-semibold">{equipment.name}</span>
+          <span className="text-cyan-400 font-mono">[{equipment.id}]</span>
+        </button>
+
+        <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          POLLING INTERVAL: 2.5s ACTIVE
+        </span>
+      </div>
 
       {/* ── 1. Equipment Header (status visible) ──────────────────────────── */}
       <EquipmentHeader equipment={equipment} />
@@ -142,66 +154,73 @@ export function EquipmentDetails(): React.ReactElement {
       {/* ── 2. Health Score + 3. RUL + alerts count ──────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Health Score */}
-        <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-5 flex flex-col items-center justify-center text-center">
+        <div className="industrial-card rounded-2xl border border-slate-800/80 p-5 flex flex-col items-center justify-center text-center shadow-lg">
           <div className="flex items-center gap-1.5 mb-3">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
-              Live Health Score
+            <p className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">
+              Telemetry Health Index
             </p>
             {prediction?.isRealModel && (
-              <span className="text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded px-1.5 py-0.5">
-                AI Model
+              <span className="text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded px-1.5 py-0.5">
+                AI MODEL
               </span>
             )}
           </div>
           <HealthScoreCard score={prediction?.healthScore ?? equipment.healthScore} size="lg" />
-          <p className="text-xs text-slate-500 mt-4">
-            Status:{' '}
+          <div className="mt-4 pt-3 border-t border-slate-800/80 w-full flex items-center justify-between text-xs font-mono">
+            <span className="text-slate-500">OPERATIONAL STATE:</span>
             <span className={clsx(
               (prediction?.healthScore ?? equipment.healthScore) >= 80 ? 'text-emerald-400' :
-              (prediction?.healthScore ?? equipment.healthScore) >= 60 ? 'text-amber-400' : 'text-red-400',
-              'font-semibold'
+              (prediction?.healthScore ?? equipment.healthScore) >= 60 ? 'text-amber-400' : 'text-rose-400',
+              'font-bold uppercase tracking-wider'
             )}>
               {prediction?.healthStatus ?? (
-                (prediction?.healthScore ?? equipment.healthScore) >= 80 ? 'Healthy' :
+                (prediction?.healthScore ?? equipment.healthScore) >= 80 ? 'Optimal' :
                 (prediction?.healthScore ?? equipment.healthScore) >= 60 ? 'Warning' : 'Critical'
               )}
             </span>
-          </p>
+          </div>
         </div>
 
         {/* RUL */}
         {predLoading ? (
           <SkeletonCard />
         ) : prediction ? (
-          <RULCard rul={prediction.rul} />
+          <RULCard rul={prediction.rul} isRealModel={prediction.isRealModel} />
         ) : (
-          <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-5 flex items-center justify-center text-slate-500 text-sm">
-            RUL data unavailable
+          <div className="industrial-card rounded-2xl border border-slate-800/80 p-5 flex items-center justify-center text-slate-500 text-xs font-mono">
+            RUL TELEMETRY STREAM OFFLINE
           </div>
         )}
 
         {/* Quick stats */}
-        <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-5 space-y-4">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Quick Stats</p>
-          <QuickStat label="Active Alerts" value={activeAlerts.length} danger={activeAlerts.length > 0} />
-          <QuickStat label="Open Work Orders" value={equipmentWorkOrders.length} />
-          <QuickStat label="Operating Hours" value={equipment.operatingHours.toLocaleString()} />
-          <QuickStat label="Last Maintenance" value={equipment.lastMaintenanceDate} />
-          <QuickStat label="Next Scheduled" value={equipment.nextMaintenanceDate} />
+        <div className="industrial-card rounded-2xl border border-slate-800/80 p-5 space-y-3 shadow-lg flex flex-col justify-between">
+          <p className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800/80 pb-2">
+            Operational Telemetry Stats
+          </p>
+          <div className="space-y-2.5">
+            <QuickStat label="Active Alarm Flags" value={activeAlerts.length} danger={activeAlerts.length > 0} />
+            <QuickStat label="Dispatched Work Orders" value={equipmentWorkOrders.length} />
+            <QuickStat label="Total Operating Runtime" value={`${equipment.operatingHours.toLocaleString()} hrs`} />
+            <QuickStat label="Last Service Timestamp" value={equipment.lastMaintenanceDate} />
+            <QuickStat label="Next Preventative Target" value={equipment.nextMaintenanceDate} />
+          </div>
         </div>
       </div>
 
       {/* ── 4. Active Alerts ──────────────────────────────────────────────── */}
       <section aria-label="Active alerts">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-slate-300">
-            Active Alerts
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono text-cyan-400 font-bold">// 01</span>
+            <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-200">
+              Active Alerts & Safety Flags
+            </h2>
             {activeAlerts.length > 0 && (
-              <span className="ml-2 px-1.5 py-0.5 bg-red-500/20 text-red-400 text-xs rounded-full">
-                {activeAlerts.length}
+              <span className="ml-1 px-1.5 py-0.2 bg-rose-500/20 text-rose-400 text-[10px] font-mono font-bold rounded border border-rose-500/30">
+                {activeAlerts.length} ACTIVE
               </span>
             )}
-          </h2>
+          </div>
         </div>
         <AlertPanel
           alerts={activeAlerts}
@@ -213,10 +232,17 @@ export function EquipmentDetails(): React.ReactElement {
 
       {/* ── 5. Current Sensor Readings ────────────────────────────────────── */}
       <section aria-label="Current sensor readings">
-        <h2 className="text-sm font-semibold text-slate-300 mb-3">
-          Current Sensor Readings
-          <span className="ml-2 text-xs text-slate-500 font-normal">(live · refreshes every 5s)</span>
-        </h2>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono text-cyan-400 font-bold">// 02</span>
+            <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-200">
+              Live Sensor Telemetry Array
+            </h2>
+          </div>
+          <span className="text-[11px] font-mono text-slate-400">
+            REFRESH: <span className="text-emerald-400">CONTINUOUS (2.5s)</span>
+          </span>
+        </div>
         {readingsLoading ? (
           <SkeletonSensorGrid count={parameters.length} />
         ) : readings ? (
@@ -242,7 +268,15 @@ export function EquipmentDetails(): React.ReactElement {
 
       {/* ── 6. Historical Trend Charts ────────────────────────────────────── */}
       <section aria-label="Historical sensor trends">
-        <h2 className="text-sm font-semibold text-slate-300 mb-3">Historical Trends</h2>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono text-cyan-400 font-bold">// 03</span>
+            <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-200">
+              Historical Sensor Trends & Tolerance Envelopes
+            </h2>
+          </div>
+          <span className="text-[11px] font-mono text-slate-500">PARAM METRIC CHANNELS (TOP 4)</span>
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {parameters.slice(0, 4).map(param => (
             <SensorChart
@@ -256,13 +290,20 @@ export function EquipmentDetails(): React.ReactElement {
 
       {/* ── 7. Anomaly Detection + 8. Fault Diagnosis ─────────────────────── */}
       <section aria-label="Anomaly detection and fault diagnosis">
-        <h2 className="text-sm font-semibold text-slate-300 mb-3">Anomaly Detection & Fault Diagnosis</h2>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono text-cyan-400 font-bold">// 04</span>
+            <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-200">
+              Real-Time Inference Engine & Fault Diagnostic
+            </h2>
+          </div>
+        </div>
         {predLoading ? (
           <SkeletonCard className="h-64" />
         ) : prediction ? (
           <PredictionPanel prediction={prediction} />
         ) : (
-          <p className="text-sm text-slate-500">Prediction data unavailable.</p>
+          <p className="text-xs font-mono text-slate-500">Inference service data stream unavailable.</p>
         )}
       </section>
 
@@ -270,11 +311,12 @@ export function EquipmentDetails(): React.ReactElement {
       <section aria-label="Machine Learning Simulation">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <h2 className="text-sm font-semibold text-slate-300">
-              Multi-Signal ML Model Simulation
+            <span className="text-xs font-mono text-cyan-400 font-bold">// 05</span>
+            <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-200">
+              Interactive ML Simulation Playground
             </h2>
-            <span className="rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-semibold text-indigo-400 border border-indigo-500/30">
-              Live AI Inference
+            <span className="rounded-full bg-indigo-500/10 px-2 py-0.5 text-[10px] font-mono font-bold text-indigo-400 border border-indigo-500/30">
+              LIVE INFERENCE
             </span>
           </div>
         </div>
@@ -295,7 +337,14 @@ export function EquipmentDetails(): React.ReactElement {
 
       {/* ── 9. Maintenance Recommendation + 10. History ─────────────────── */}
       <section aria-label="Maintenance">
-        <h2 className="text-sm font-semibold text-slate-300 mb-3">Maintenance</h2>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono text-cyan-400 font-bold">// 06</span>
+            <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-200">
+              Maintenance Interventions & Work Orders
+            </h2>
+          </div>
+        </div>
         <MaintenancePanel
           recommendations={recommendations}
           workOrders={equipmentWorkOrders}
@@ -305,26 +354,33 @@ export function EquipmentDetails(): React.ReactElement {
         {/* Maintenance History */}
         {history.length > 0 && (
           <div className="mt-6">
-            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">
-              Maintenance History
+            <h3 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider mb-3">
+              Historical Service & Repair Logs
             </h3>
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               {history.map(record => (
-                <div key={record.id} className="bg-slate-800/30 rounded-lg border border-slate-700/30 px-4 py-3">
-                  <div className="flex flex-wrap items-start justify-between gap-2 mb-1">
-                    <span className="text-sm font-medium text-slate-300">{record.description}</span>
-                    <span className="text-xs text-slate-500">{record.date}</span>
+                <div key={record.id} className="industrial-card rounded-xl border border-slate-800/80 p-4 shadow-sm">
+                  <div className="flex flex-wrap items-start justify-between gap-2 mb-1.5">
+                    <span className="text-sm font-semibold text-slate-200">{record.description}</span>
+                    <span className="text-xs font-mono text-cyan-400">{record.date}</span>
                   </div>
-                  <div className="flex flex-wrap gap-3 text-xs text-slate-500">
-                    <span className="capitalize">{record.type}</span>
-                    <span>·</span>
-                    <span>{record.performedBy}</span>
-                    <span>·</span>
-                    <span>{record.duration}h</span>
-                    {record.cost !== undefined && <span>· ${record.cost}</span>}
+                  <div className="flex flex-wrap gap-3 text-xs font-mono text-slate-400">
+                    <span className="capitalize text-slate-300">TYPE: {record.type}</span>
+                    <span className="text-slate-600">·</span>
+                    <span>TECH: {record.performedBy}</span>
+                    <span className="text-slate-600">·</span>
+                    <span>DUR: {record.duration}h</span>
+                    {record.cost !== undefined && (
+                      <>
+                        <span className="text-slate-600">·</span>
+                        <span className="text-emerald-400">COST: ${record.cost}</span>
+                      </>
+                    )}
                   </div>
                   {record.findings && (
-                    <p className="text-xs text-slate-500 mt-1.5">{record.findings}</p>
+                    <p className="text-xs font-sans text-slate-400 bg-slate-950/40 border border-slate-800/60 rounded p-2 mt-2">
+                      {record.findings}
+                    </p>
                   )}
                 </div>
               ))}
@@ -338,9 +394,9 @@ export function EquipmentDetails(): React.ReactElement {
 
 function QuickStat({ label, value, danger }: { label: string; value: string | number; danger?: boolean }) {
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-xs text-slate-500">{label}</span>
-      <span className={clsx('text-xs font-semibold tabular-nums', danger ? 'text-red-400' : 'text-slate-300')}>
+    <div className="flex items-center justify-between text-xs py-1 border-b border-slate-800/40 last:border-0">
+      <span className="font-mono text-slate-400">{label}</span>
+      <span className={clsx('font-mono font-bold tabular-nums', danger ? 'text-rose-400' : 'text-slate-200')}>
         {value}
       </span>
     </div>
