@@ -70,8 +70,6 @@ def list_equipment(
         )
 
     rows = query.all()
-    # Only keep equipment that have active real-time ML models (CNC, Compressor, Pump)
-    rows = [r for r in rows if ml_registry.is_available(ml_registry.normalize_type(r.type))]
 
     results = []
     for r in rows:
@@ -104,13 +102,6 @@ def get_equipment(equipment_id: str, db: Session = Depends(get_db)):
     row = db.query(EquipmentModel).filter(EquipmentModel.id == equipment_id).first()
     if not row:
         raise HTTPException(status_code=404, detail="Equipment not found")
-
-    norm_type = ml_registry.normalize_type(row.type)
-    if not ml_registry.is_available(norm_type):
-        raise HTTPException(
-            status_code=400,
-            detail=f"Equipment '{equipment_id}' ({row.type}) is inactive. Only machines with real-time ML models (CNC Machine, Compressor, Centrifugal Pump) are active."
-        )
 
     live_health, live_status = _get_live_health_for_equipment(row, db)
     return EquipmentSchema(

@@ -27,6 +27,8 @@ TYPE_DISPLAY_NAMES = {
     "pump": "Centrifugal Pumps",
     "compressor": "Compressors",
     "cnc_machine": "CNC Machines",
+    "robotic_arm": "Robotic Arms",
+    "electric_motor": "Electric Motors",
 }
 
 
@@ -35,11 +37,10 @@ def get_analytics(db: Session = Depends(get_db)):
     """
     Returns the full analytics payload:
     { summary, typeMetrics, healthDistribution }
-    Only includes active equipment running real-time ML inference.
+    Shows all equipment; uses live ML scores when available, DB fallback otherwise.
     """
     raw_equipment = db.query(EquipmentModel).all()
-    # Strictly keep only machines backed by active ML models
-    equipment = [e for e in raw_equipment if ml_registry.is_available(ml_registry.normalize_type(e.type))]
+    equipment = raw_equipment
     total = len(equipment)
     if total == 0:
         return {
@@ -52,7 +53,7 @@ def get_analytics(db: Session = Depends(get_db)):
             "healthDistribution": [],
         }
 
-    # Compute live health & status for all active ML machines
+    # Compute live health & status for all machines (falls back to DB values if ML unavailable)
     live_data = {e.id: _get_live_health_for_equipment(e, db) for e in equipment}
 
     healthy = sum(1 for e in equipment if live_data[e.id][1] == "healthy")
@@ -87,10 +88,10 @@ def get_analytics(db: Session = Depends(get_db)):
         anomaliesDetected=anomalies,
     )
 
-    # Type metrics for the 3 active ML models
-    types = ["cnc_machine", "compressor", "pump"]
+    # Type metrics — gather from all unique equipment types in DB
+    unique_types = sorted(set(e.type for e in equipment))
     type_metrics = []
-    for t in types:
+    for t in unique_types:
         equip_of_type = [e for e in equipment if e.type == t]
         count = len(equip_of_type)
         if count == 0:
@@ -98,7 +99,7 @@ def get_analytics(db: Session = Depends(get_db)):
         avg_h = round(sum(live_data[e.id][0] for e in equip_of_type) / count, 1)
         type_metrics.append(EquipmentTypeMetricSchema(
             type=t,
-            displayName=TYPE_DISPLAY_NAMES.get(t, t.title()),
+            displayName=TYPE_DISPLAY_NAMES.get(t, t.replace("_", " ").title()),
             avgHealth=avg_h,
             count=count,
             criticalCount=sum(1 for e in equip_of_type if live_data[e.id][1] == "critical"),
@@ -107,11 +108,11 @@ def get_analytics(db: Session = Depends(get_db)):
 
     # Health distribution
     ranges = [
-        ("0–49", 0, 49),
-        ("50–69", 50, 69),
-        ("70–79", 70, 79),
-        ("80–89", 80, 89),
-        ("90–100", 90, 100),
+        ("0\u201349", 0, 49),
+        ("50\u201369", 50, 69),
+        ("70\u201379", 70, 79),
+        ("80\u201389", 80, 89),
+        ("90\u2013100", 90, 100),
     ]
     health_dist = [
         HealthDistributionPointSchema(
