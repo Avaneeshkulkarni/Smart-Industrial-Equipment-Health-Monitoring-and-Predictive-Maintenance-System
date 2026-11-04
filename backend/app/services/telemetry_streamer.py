@@ -122,6 +122,28 @@ EQUIPMENT_PROFILES: Dict[str, Dict[str, Any]] = {
         "ambient_temp": 23.0,
         "ranges": {"vibration_rms": (2.3, 3.2), "temperature_motor": (61.0, 69.0), "pressure_level": (4.3, 5.0), "flowRate": (78.0, 87.0)},
     },
+    "ARM-001": {
+        "type": "robotic_arm",
+        "vibration_rms": 1.25,
+        "temperature_motor": 44.5,
+        "current_phase_avg": 11.8,
+        "pressure_level": 5.8,
+        "rpm": 1200.0,
+        "ambient_temp": 22.0,
+        "power": 12.0,
+        "ranges": {"vibration_rms": (1.0, 1.6), "temperature_motor": (42.0, 48.0), "rpm": (1180, 1220), "current_phase_avg": (11.0, 13.0)},
+    },
+    "ARM-002": {
+        "type": "robotic_arm",
+        "vibration_rms": 2.10,
+        "temperature_motor": 56.2,
+        "current_phase_avg": 15.4,
+        "pressure_level": 5.5,
+        "rpm": 1250.0,
+        "ambient_temp": 23.0,
+        "power": 14.5,
+        "ranges": {"vibration_rms": (1.8, 2.6), "temperature_motor": (52.0, 60.0), "rpm": (1230, 1270), "current_phase_avg": (14.5, 17.0)},
+    },
 }
 
 _running = False
